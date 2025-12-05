@@ -1,0 +1,29 @@
+project:
+  type: website
+
+output-dir: _site
+
+website:
+  title: "MMES565FINAL"
+  
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - Methods.qmd
+      - Statistics.qmd
+      - Other Projects.qmd
+      - about.qmd
+      
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true
+    
+
+editor: visual
+

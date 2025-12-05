@@ -1,0 +1,22 @@
+Sheets,
+SiteMetadata,List of TCRMP sites with identifying information
+FishMetadata,Information regarding species observed on surveys
+FishCountRaw,Data in this tab are counts of individuals by species
+FishBiomassRaw,Data in this tab are calculated biomass by species
+,
+,
+Columns,
+Location,Monitoring location at which data was collected
+Year,Year in which data was collected
+Month,"Month in which data was collected; Note - when a location was not surveyed fully in the same month, the month in which sampling began is used as the sample month"
+SampleYear,"Monitoring period in which data was collected; Note - Sample year may not always match ""Year"" if a location was surveyed late in the annual monitoring period (i.e. data collected in January 2018 could be included in the 2017 annual monitoring period)"
+Period,"Refers to the sample period in which the data falls; Periods are as follows: Annual (normal annual TCRMP sampling), PeakBL (secondary TCRMP sampling to capture peak bleaching due to thermal stress), PostBL (secondary sampling as a follow up to thermal stress), SCTLD (extra sampling points taken at a subsample of TCRMP locations to monitor the progression of Stony Coral Tissue Loss Disease), and WS (samples taken at a subset of TCRMP locations [Black Point, Buck Island STT, Coculus Rock, Magens Bay, Botany Bay, Savana, Flat Cay, Seahorse Cottage Shoal] during research cruises aboard the R/V Walton Smith); Note that fish census did not occur during all sample periods"
+Transect,Transect number
+ScientificName,Identifies the species observed by its scientific name
+SizeClass,Identifies the size class in which observed species fell. All size classes are in cm
+Count/Biomass,Count of the total number of individuals of each species observed in each size class or total biomass of individuals of each species observed in each size class
+SppTotal,
+,
+,
+Other Notes,
+1,Please contact Shaun Kadison (ekadiso@uvi.edu) for questions regarding methodology

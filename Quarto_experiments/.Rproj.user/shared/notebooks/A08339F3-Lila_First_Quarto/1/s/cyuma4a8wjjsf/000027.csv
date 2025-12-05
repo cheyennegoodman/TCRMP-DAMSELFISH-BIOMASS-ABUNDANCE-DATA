@@ -1,0 +1,8 @@
+"0","1 + 1"
+"1","[1]"
+"1"," 2"
+"1","
+"
+"0","library(tidyverse)"
+"0","library(readxl)"
+"0","myData <- read_xlsx(""C:/Users/Owner/OneDrive/Documents/SM/Quarto_experiments/data/sttstj_all_sites.xlsx"")"

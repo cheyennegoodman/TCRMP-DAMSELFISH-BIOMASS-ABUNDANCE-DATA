@@ -1,0 +1,170 @@
+[
+  {
+    "objectID": "Statistics.html",
+    "href": "Statistics.html",
+    "title": "Statistics",
+    "section": "",
+    "text": "The Territorial Coral Reef Monitoring Program (TCRMP) has fish abundance and biomass data from 2002; however, records of damselfish-coral interactions do not consistently begin until 2013 which is why I am looking at trends from 2013-2021.\nAll damselfish species found in the USVI were accounted for measuring the biomass and abundance at each TCRMP site. Two maps were created to look at the mean damselfish biomass/ abundance rom 2013 to 2021 (Figure No.1 and No.2). From the maps, it looks like St. Croix has a higher abundance of damselfish species throughout the years, but have medium biomass.\n\n\n\nFigure No. 1. The Average Damselfish Biomass from 2013-2021\n\n\n\n\n\nFigure No. 2. The Average Damselfish Abundance from 2013-2021\n\n\nFigure No. 3 demostrates damselfish biomass trends along different sites from 2013 to 2021.\n\n\nReveal the code\n####Libraries########\nlibrary(tidyverse)\nlibrary(readxl)\nlibrary(ggplot2)\n\n#GOAL: avg biomass every site for the last 10 years (for this map for class)\n\nTCRMP_FISH_METADATA &lt;- read.csv(\"TCRMP_datasets/TCRMP_Master_Fish_Census_Aug2022.xlsx - MetaData.csv\")\n\nTCRMP_FISH_RAW &lt;- read.csv(\"TCRMP_datasets/TCRMP_Master_Fish_Census_Aug2022.xlsx - FishData.csv\")\n\nCLEAN_TCRMP_FISH &lt;- subset(TCRMP_FISH_RAW, select = -c(Month, SampleYear , Period, CommonName, X0.5, X6.10, X11.20, X21.30, X31.40, X41.50, X51.60, X61.70, X71.80, X81.90, X91.100)) %&gt;% # removing excess columns \n  mutate(Location = toupper(Location)) %&gt;% #making all site names the same \n  dplyr::filter(!dplyr::between(as.numeric (Year), 2003, 2012)) #filter data to 2013-2021\n\nBIOMASS_DAMSEL &lt;- dplyr::filter(CLEAN_TCRMP_FISH, Metric!= \"Abundance\", #removing rows (abundance) \n    ScientificName %in% c(\n    \"Microspathodon chrysurus\",         #Yellowtail damselfish\n    \"Stegastes partitus\",               #Bicolor damselfish\n    \"Stegastes variabilis\",             #Cocoa damselfish\n    \"Stegastes diencaeus\" ,             #Longfin damselfish\n    \"Stegastes adustus\",                #Dusky damselfish\n    \"Stegastes leucostictus\",           #Beaugregory damselfish\n    \"Stegastes planifrons\",             #Threespot damselfish\n    \"Abudefduf saxatilis\"               #Sargent major\n  )) # removing all fish species except damselfish species \n\nTRANSECT_MEAN_DAMSEL &lt;- BIOMASS_DAMSEL %&gt;% # mean of damselfish biomass along each transect by year and location\n  group_by(Location, Transect, Year) %&gt;% \n  summarise(\n    Sum_Biomass= sum(Total),\n    Mean_Biomass  = mean(Total) ,\n    .groups = \"drop\") %&gt;% \n  unique()\n\nDAMSELFISH_BIOMASS &lt;- TRANSECT_MEAN_DAMSEL  %&gt;% # Mean of damselfish biomass along each site per year \n  group_by(Location, Year)  %&gt;% \n  summarise(\n    Location_Biomass_mean = (sum(Mean_Biomass))/10 #10 is the transect per site\n  )\n\nMAP_DAMSELFISH_BIOMASS &lt;- DAMSELFISH_BIOMASS  %&gt;% # Mean of damselfish biomass along each site \n  group_by(Location)  %&gt;% \n  summarise(\n    Location_Biomass_mean = (mean(Location_Biomass_mean))\n  )\n\nprint(head(MAP_DAMSELFISH_BIOMASS))\n\n\n# A tibble: 6 × 2\n  Location             Location_Biomass_mean\n  &lt;chr&gt;                                &lt;dbl&gt;\n1 BLACK POINT                          106. \n2 BOTANY BAY                            96.0\n3 BREWERS BAY                          277. \n4 BUCK ISLAND STT                       64.2\n5 BUCK ISLAND STX                       45.6\n6 BUCK ISLAND STX DEEP                  39.2\n\n\nReveal the code\nBIOMASS_PLOT &lt;- ggplot(DAMSELFISH_BIOMASS, aes(x=Year , y = Location_Biomass_mean, group= Location, color = Location)) +\n  geom_line() +\n  labs(x= \"Year\", y= \"Mean Biomass (g)\") +\n  labs(caption = \"Figure No. 3. Average Damselfish Biomass Per Year By Location\") +\ntheme_minimal() +\n  theme(legend.position = \"right\") +\n  theme(axis.text.x = element_text(angle = 45, hjust = 1)) \n\nprint(BIOMASS_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\n## need to mutate to combine site locations to make a map! ##\n\n#TCRMP_SITE &lt;- read.csv(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/TCRMP_datasets/TCRMP_Site_Metadata.xls - SiteMetadata.csv\") %&gt;% \n  #mutate(Location = toupper(Location)) # uppercase site so they match my other dataset\n\n#SITE_BIOMASS_DAMSELFISH &lt;- \n  #left_join(DAMSELFISH_BIOMASS, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#SITE_MAP_DAMSELFISH_BIOMASS &lt;-  \n  #left_join(MAP_DAMSELFISH_BIOMASS, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#saved desired datasets for ArcGIS\n\n#write.csv(SITE_BIOMASS_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Annual_Damselfish_Biomass.csv\"), row.names = FALSE)\n\n#write.csv(SITE_MAP_DAMSELFISH_BIOMASS, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Average_Damselfish_Biomass.csv\"), row.names = FALSE)\n\n\n\n\nReveal the code\n####################################################################\n#######doing everything but with abundance ###############\n####################################################################\nABUND_DAMSEL &lt;- dplyr::filter(CLEAN_TCRMP_FISH, Metric!= \"Biomass\" , # removing rows (biomass)\n   ScientificName %in% c(\n    \"Microspathodon chrysurus\",\n    \"Stegastes partitus\",\n    \"Stegastes variabilis\",\n    \"Stegastes adustus\",\n    \"Stegastes leucostictus\",\n    \"Stegastes planifrons\"\n  ))\n\nTRANSECT_ABUND_MEAN_DAMSEL &lt;- ABUND_DAMSEL %&gt;% # mean of damselfish abundance along each transect by year and location\n  group_by(Location, Transect, Year) %&gt;% \n  summarise(\n    Sum_Abundance= sum(Total),\n    Mean_Abundance  = mean(Total) ,\n    .groups = \"drop\") %&gt;% \n  unique()\n\nABUNDANCE_DAMSELFISH &lt;- TRANSECT_ABUND_MEAN_DAMSEL  %&gt;% # Mean of damselfish biomass along each site per year and location\n  group_by(Location, Year)  %&gt;% \n  summarise(\n    Location_Abundance_mean = (sum(Mean_Abundance))/10 #10 is the transect per site\n  )\n\nMAP_ABUND_DAMSELFISH &lt;- ABUNDANCE_DAMSELFISH  %&gt;% # Mean of damselfish biomass along each site \n  group_by(Location)  %&gt;% \n  summarise(\n    Location_Abundance_mean = (mean(Location_Abundance_mean))\n  )\n\nprint(head(MAP_ABUND_DAMSELFISH))\n\n\n# A tibble: 6 × 2\n  Location             Location_Abundance_mean\n  &lt;chr&gt;                                  &lt;dbl&gt;\n1 BLACK POINT                             9.96\n2 BOTANY BAY                              6.24\n3 BREWERS BAY                            16.6 \n4 BUCK ISLAND STT                        11.3 \n5 BUCK ISLAND STX                         5.02\n6 BUCK ISLAND STX DEEP                    9.71\n\n\nReveal the code\nABUNDANCE_PLOT &lt;- ggplot(ABUNDANCE_DAMSELFISH, aes(x=Year , y = Location_Abundance_mean, group= Location, color = Location)) +\n  geom_line() +\n  labs(x= \"Year\", y= \"Mean Abundance\") +\n  labs(caption = \"Figure No. 4. Average Damselfish Abundance Per Year By Location\") +\ntheme_minimal() +\n  theme(legend.position = \"right\") +\n  theme(axis.text.x = element_text(angle = 45, hjust = 1)) \n\nprint(ABUNDANCE_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\n## need to mutate to combine site locations to make a map! ##\n\n#SITE_ABUND_DAMSELFISH &lt;- \n # left_join(ABUNDANCE_DAMSELFISH, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#SITE_MAP_ABUND_DAMSELFISH &lt;-  \n # left_join(MAP_ABUND_DAMSELFISH, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#saved desired datasets for ArcGIS\n\n#write.csv(SITE_ABUND_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Annual_Damselfish_Abundance.csv\"), row.names = FALSE)\n\n\n#write.csv(SITE_MAP_ABUND_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Average_Damselfish_Abundance.csv\"), row.names = FALSE)"
+  },
+  {
+    "objectID": "Statistics.html#damselfish-population-trends-from-2013-2021",
+    "href": "Statistics.html#damselfish-population-trends-from-2013-2021",
+    "title": "Statistics",
+    "section": "",
+    "text": "The Territorial Coral Reef Monitoring Program (TCRMP) has fish abundance and biomass data from 2002; however, records of damselfish-coral interactions do not consistently begin until 2013 which is why I am looking at trends from 2013-2021.\nAll damselfish species found in the USVI were accounted for measuring the biomass and abundance at each TCRMP site. Two maps were created to look at the mean damselfish biomass/ abundance rom 2013 to 2021 (Figure No.1 and No.2). From the maps, it looks like St. Croix has a higher abundance of damselfish species throughout the years, but have medium biomass.\n\n\n\nFigure No. 1. The Average Damselfish Biomass from 2013-2021\n\n\n\n\n\nFigure No. 2. The Average Damselfish Abundance from 2013-2021\n\n\nFigure No. 3 demostrates damselfish biomass trends along different sites from 2013 to 2021.\n\n\nReveal the code\n####Libraries########\nlibrary(tidyverse)\nlibrary(readxl)\nlibrary(ggplot2)\n\n#GOAL: avg biomass every site for the last 10 years (for this map for class)\n\nTCRMP_FISH_METADATA &lt;- read.csv(\"TCRMP_datasets/TCRMP_Master_Fish_Census_Aug2022.xlsx - MetaData.csv\")\n\nTCRMP_FISH_RAW &lt;- read.csv(\"TCRMP_datasets/TCRMP_Master_Fish_Census_Aug2022.xlsx - FishData.csv\")\n\nCLEAN_TCRMP_FISH &lt;- subset(TCRMP_FISH_RAW, select = -c(Month, SampleYear , Period, CommonName, X0.5, X6.10, X11.20, X21.30, X31.40, X41.50, X51.60, X61.70, X71.80, X81.90, X91.100)) %&gt;% # removing excess columns \n  mutate(Location = toupper(Location)) %&gt;% #making all site names the same \n  dplyr::filter(!dplyr::between(as.numeric (Year), 2003, 2012)) #filter data to 2013-2021\n\nBIOMASS_DAMSEL &lt;- dplyr::filter(CLEAN_TCRMP_FISH, Metric!= \"Abundance\", #removing rows (abundance) \n    ScientificName %in% c(\n    \"Microspathodon chrysurus\",         #Yellowtail damselfish\n    \"Stegastes partitus\",               #Bicolor damselfish\n    \"Stegastes variabilis\",             #Cocoa damselfish\n    \"Stegastes diencaeus\" ,             #Longfin damselfish\n    \"Stegastes adustus\",                #Dusky damselfish\n    \"Stegastes leucostictus\",           #Beaugregory damselfish\n    \"Stegastes planifrons\",             #Threespot damselfish\n    \"Abudefduf saxatilis\"               #Sargent major\n  )) # removing all fish species except damselfish species \n\nTRANSECT_MEAN_DAMSEL &lt;- BIOMASS_DAMSEL %&gt;% # mean of damselfish biomass along each transect by year and location\n  group_by(Location, Transect, Year) %&gt;% \n  summarise(\n    Sum_Biomass= sum(Total),\n    Mean_Biomass  = mean(Total) ,\n    .groups = \"drop\") %&gt;% \n  unique()\n\nDAMSELFISH_BIOMASS &lt;- TRANSECT_MEAN_DAMSEL  %&gt;% # Mean of damselfish biomass along each site per year \n  group_by(Location, Year)  %&gt;% \n  summarise(\n    Location_Biomass_mean = (sum(Mean_Biomass))/10 #10 is the transect per site\n  )\n\nMAP_DAMSELFISH_BIOMASS &lt;- DAMSELFISH_BIOMASS  %&gt;% # Mean of damselfish biomass along each site \n  group_by(Location)  %&gt;% \n  summarise(\n    Location_Biomass_mean = (mean(Location_Biomass_mean))\n  )\n\nprint(head(MAP_DAMSELFISH_BIOMASS))\n\n\n# A tibble: 6 × 2\n  Location             Location_Biomass_mean\n  &lt;chr&gt;                                &lt;dbl&gt;\n1 BLACK POINT                          106. \n2 BOTANY BAY                            96.0\n3 BREWERS BAY                          277. \n4 BUCK ISLAND STT                       64.2\n5 BUCK ISLAND STX                       45.6\n6 BUCK ISLAND STX DEEP                  39.2\n\n\nReveal the code\nBIOMASS_PLOT &lt;- ggplot(DAMSELFISH_BIOMASS, aes(x=Year , y = Location_Biomass_mean, group= Location, color = Location)) +\n  geom_line() +\n  labs(x= \"Year\", y= \"Mean Biomass (g)\") +\n  labs(caption = \"Figure No. 3. Average Damselfish Biomass Per Year By Location\") +\ntheme_minimal() +\n  theme(legend.position = \"right\") +\n  theme(axis.text.x = element_text(angle = 45, hjust = 1)) \n\nprint(BIOMASS_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\n## need to mutate to combine site locations to make a map! ##\n\n#TCRMP_SITE &lt;- read.csv(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/TCRMP_datasets/TCRMP_Site_Metadata.xls - SiteMetadata.csv\") %&gt;% \n  #mutate(Location = toupper(Location)) # uppercase site so they match my other dataset\n\n#SITE_BIOMASS_DAMSELFISH &lt;- \n  #left_join(DAMSELFISH_BIOMASS, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#SITE_MAP_DAMSELFISH_BIOMASS &lt;-  \n  #left_join(MAP_DAMSELFISH_BIOMASS, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#saved desired datasets for ArcGIS\n\n#write.csv(SITE_BIOMASS_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Annual_Damselfish_Biomass.csv\"), row.names = FALSE)\n\n#write.csv(SITE_MAP_DAMSELFISH_BIOMASS, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Average_Damselfish_Biomass.csv\"), row.names = FALSE)\n\n\n\n\nReveal the code\n####################################################################\n#######doing everything but with abundance ###############\n####################################################################\nABUND_DAMSEL &lt;- dplyr::filter(CLEAN_TCRMP_FISH, Metric!= \"Biomass\" , # removing rows (biomass)\n   ScientificName %in% c(\n    \"Microspathodon chrysurus\",\n    \"Stegastes partitus\",\n    \"Stegastes variabilis\",\n    \"Stegastes adustus\",\n    \"Stegastes leucostictus\",\n    \"Stegastes planifrons\"\n  ))\n\nTRANSECT_ABUND_MEAN_DAMSEL &lt;- ABUND_DAMSEL %&gt;% # mean of damselfish abundance along each transect by year and location\n  group_by(Location, Transect, Year) %&gt;% \n  summarise(\n    Sum_Abundance= sum(Total),\n    Mean_Abundance  = mean(Total) ,\n    .groups = \"drop\") %&gt;% \n  unique()\n\nABUNDANCE_DAMSELFISH &lt;- TRANSECT_ABUND_MEAN_DAMSEL  %&gt;% # Mean of damselfish biomass along each site per year and location\n  group_by(Location, Year)  %&gt;% \n  summarise(\n    Location_Abundance_mean = (sum(Mean_Abundance))/10 #10 is the transect per site\n  )\n\nMAP_ABUND_DAMSELFISH &lt;- ABUNDANCE_DAMSELFISH  %&gt;% # Mean of damselfish biomass along each site \n  group_by(Location)  %&gt;% \n  summarise(\n    Location_Abundance_mean = (mean(Location_Abundance_mean))\n  )\n\nprint(head(MAP_ABUND_DAMSELFISH))\n\n\n# A tibble: 6 × 2\n  Location             Location_Abundance_mean\n  &lt;chr&gt;                                  &lt;dbl&gt;\n1 BLACK POINT                             9.96\n2 BOTANY BAY                              6.24\n3 BREWERS BAY                            16.6 \n4 BUCK ISLAND STT                        11.3 \n5 BUCK ISLAND STX                         5.02\n6 BUCK ISLAND STX DEEP                    9.71\n\n\nReveal the code\nABUNDANCE_PLOT &lt;- ggplot(ABUNDANCE_DAMSELFISH, aes(x=Year , y = Location_Abundance_mean, group= Location, color = Location)) +\n  geom_line() +\n  labs(x= \"Year\", y= \"Mean Abundance\") +\n  labs(caption = \"Figure No. 4. Average Damselfish Abundance Per Year By Location\") +\ntheme_minimal() +\n  theme(legend.position = \"right\") +\n  theme(axis.text.x = element_text(angle = 45, hjust = 1)) \n\nprint(ABUNDANCE_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\n## need to mutate to combine site locations to make a map! ##\n\n#SITE_ABUND_DAMSELFISH &lt;- \n # left_join(ABUNDANCE_DAMSELFISH, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#SITE_MAP_ABUND_DAMSELFISH &lt;-  \n # left_join(MAP_ABUND_DAMSELFISH, TCRMP_SITE[, c(\"Location\", \"Latitude\", \"Longitude\", \"Island\" )], by = \"Location\")\n\n#saved desired datasets for ArcGIS\n\n#write.csv(SITE_ABUND_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Annual_Damselfish_Abundance.csv\"), row.names = FALSE)\n\n\n#write.csv(SITE_MAP_ABUND_DAMSELFISH, file.path(\"C:/Users/Owner/OneDrive/Documents/GOODMAN_THESIS/RCODE/CREATED_DATASETS\", \"Average_Damselfish_Abundance.csv\"), row.names = FALSE)"
+  },
+  {
+    "objectID": "Statistics.html#water-table-failed-experiment-data",
+    "href": "Statistics.html#water-table-failed-experiment-data",
+    "title": "Statistics",
+    "section": "Water Table Failed Experiment Data",
+    "text": "Water Table Failed Experiment Data\nBoth water tables were set up at the same time; however, the ambient water table experienced a lot of leaking. Water changed became infrequent after September 9th - 31st. There was also two storms that occurred around September 19th and 25th.\nOverall, both water tables experienced very high temperatures and could not be used for my coral experiment.\n\n\nReveal the code\nlibrary(tidyverse)\n\n\nHEAT_clean &lt;- read_csv(\"HOBO_LOGGER/Goodman_WT_Heat_20250903_21445092.csv\")%&gt;%\n  select(-`Coupler Detached`, -`Coupler Attached`, -`Host Connected`, - Stopped, - `End Of File`, -`#`) %&gt;%\n    filter(!is.na(`Date Time, GMT-04:00`) & !is.na(`Temp, °C`))\n\nHEAT_clean$`Date Time, GMT-04:00` &lt;- as.POSIXct(HEAT_clean$`Date Time, GMT-04:00`, format = \"%m/%d/%Y %H:%M\")\n\nHEAT_PLOT &lt;- ggplot(data = HEAT_clean, aes(x= `Date Time, GMT-04:00` , y= `Temp, °C`)) +\n  geom_line(color = \"red\") +\n  labs(title = \"Heated Water Table Temperature in September 2025\" , \n       caption = \"Figure No. 5. Heated Water Table for September\" ,\n         x = \"Time\" ,\n         y = \"Temperature °C\")\n\nprint(HEAT_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\nHEAT_MEAN &lt;- HEAT_clean %&gt;% \n  mutate( `Date`= as.Date(`Date Time, GMT-04:00`))  %&gt;% \n  group_by(`Date`) %&gt;% \n  summarise( Mean_H_temp = mean(`Temp, °C`),\n             Date = Date)\n\n## Great! I was able to see the Means of daily temperature, Time to plot!\n\nDAILY_HP &lt;- ggplot(data = HEAT_MEAN, aes(x=Date , y = Mean_H_temp)) +\n  geom_line(color = \"red3\") +\n  labs(title = \"Daily Average Temperature of Heated Water Table in September 2025\" ,\n       caption = \"Figure No. 6. Daily Heated Water Table Temperature\",\n       x = \"Time\" ,\n       y = \"Temperature °C\")\n\nprint(DAILY_HP)\n\n\n\n\n\n\n\n\n\n\n\nReveal the code\nAMBIENT_clean &lt;- read_csv(\"HOBO_LOGGER/Goodman_WT_Regular_20250903_214451061.csv\") %&gt;% \n  select(-`Coupler Detached`, -`Coupler Attached`, -`Host Connected`, - Stopped, - `End Of File`, -`#`) %&gt;%\n  filter(!is.na(`Date Time, GMT-04:00`) & !is.na(`Temp, °C`))\n\n## fix date as an numeric \nAMBIENT_clean$`Date Time, GMT-04:00` &lt;- as.POSIXct(AMBIENT_clean$`Date Time, GMT-04:00`, format = \"%m/%d/%Y %H:%M\")\n\nAMBIENT_PLOT &lt;- ggplot( data = AMBIENT_clean , aes(x = `Date Time, GMT-04:00`, y = `Temp, °C`)) +\n  geom_line( color = \"blue\") +\n  labs(title = \"Ambient Water Table Temperatures in September 2025\" ,\n       caption = \"Figure No. 7. Ambient Water Table For September\" ,\n       x = \"Time\",\n       y = \"Temperature °C\")\n\nprint(AMBIENT_PLOT)\n\n\n\n\n\n\n\n\n\nReveal the code\nAMBIENT_MEAN &lt;- AMBIENT_clean %&gt;%\n  mutate(Date = as.Date(`Date Time, GMT-04:00`)) %&gt;%\n  group_by(Date) %&gt;%\n  summarise( mean_A_temp = mean(`Temp, °C`), Date = Date)\n\n##YES NOW PLOT!\n\nAMB_MEAN_PLOT &lt;- ggplot(data=AMBIENT_MEAN , aes(x=Date , y = mean_A_temp)) +\n  geom_line(color = \"blue3\") +\n  labs(title = \"Daily Average Temperature of Ambient Water Table in September 2025\" , \n       caption = \"Figure No.8. Ambient Water Table For September\" ,\n       x = \"Time\" ,\n       y = \"Temperature °C\")\n\nprint(AMB_MEAN_PLOT)"
+  },
+  {
+    "objectID": "Other Projects.html",
+    "href": "Other Projects.html",
+    "title": "Other Projects",
+    "section": "",
+    "text": "Biofoul are sessile marine animals that grow on top of submerged structures. Tropical biofouling community succession is underresearched in the Caribbean. My cohort and I researched taxon-level early stage biofouling communities across the southern side of St. Thomas.\nWe are currently in the process of submitting our original research. I aided in creating a map of the watershed characteristics of St. Thomas, USVI and our site locations (Fig 1.).\n\n\n\nFigure No. 1. Watershed and Experiment Sites along Southern St. Thomas, USVI by Cheyenne L. Goodman"
+  },
+  {
+    "objectID": "Other Projects.html#mmes-cohort-2024-capstone-biofouling",
+    "href": "Other Projects.html#mmes-cohort-2024-capstone-biofouling",
+    "title": "Other Projects",
+    "section": "",
+    "text": "Biofoul are sessile marine animals that grow on top of submerged structures. Tropical biofouling community succession is underresearched in the Caribbean. My cohort and I researched taxon-level early stage biofouling communities across the southern side of St. Thomas.\nWe are currently in the process of submitting our original research. I aided in creating a map of the watershed characteristics of St. Thomas, USVI and our site locations (Fig 1.).\n\n\n\nFigure No. 1. Watershed and Experiment Sites along Southern St. Thomas, USVI by Cheyenne L. Goodman"
+  },
+  {
+    "objectID": "Introduction.html",
+    "href": "Introduction.html",
+    "title": "Introduction and Research Objectives",
+    "section": "",
+    "text": "Figure No. 1. A photo of Orbicella annularis taken by Cheyenne L. Goodman"
+  },
+  {
+    "objectID": "Introduction.html#introduction",
+    "href": "Introduction.html#introduction",
+    "title": "Introduction and Research Objectives",
+    "section": "Introduction",
+    "text": "Introduction\nCorals are important They are decreasing in population due to stressors (bleaching) Decrease in their #1 fans (diadema)\n\n\n\nFigure No. 2. A photo of Orbicella annularis with tissue lesions caused by fish predation taken by Cheyenne L. Goodman\n\n\nDamselfish species are bad because they make coral kill themselves or not (hehe) Increase in macroalgae + phase shift theory Degraded reef system complexes"
+  },
+  {
+    "objectID": "Introduction.html#research-objectives",
+    "href": "Introduction.html#research-objectives",
+    "title": "Introduction and Research Objectives",
+    "section": "Research Objectives",
+    "text": "Research Objectives\nMy thesis revolves around"
+  },
+  {
+    "objectID": "Introduction.html#background",
+    "href": "Introduction.html#background",
+    "title": "Introduction and Research Objectives",
+    "section": "Background",
+    "text": "Background\nThis website serves as a record of my progress in the Masters in Marine in Environmental Science program at the University of the Virgin Islands. This website is created for MMES 565 taught by Jeremiah Blondeau."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n\nCheyenne Leila Goodman\nMaster Candidate\nMaster in Marine in Environmental Science\nThank you for clicking on my website and reading through my current research!"
+  },
+  {
+    "objectID": "Methods.html",
+    "href": "Methods.html",
+    "title": "Methods",
+    "section": "",
+    "text": "I am reviewing the Territorial Coral Reef Monitoring Program (TCRMP) dataset from 2013-2021 to investigate damselfish biomass and abundance. See statistical analysis to view the damselfish population trends between 2012-2021.\nFor my thesis, I will also incorporate coral health and macroalgae abundance to see if there is a correlation with:\nI hope to get a hold of DPNR’s dataset of damselfish predation to fill in gaps that TCRMP has. For example, not every diver knows/ records damselfish species during their coral health surveys to make an accurate depiction of damselfish-coral interaction."
+  },
+  {
+    "objectID": "Methods.html#background-data",
+    "href": "Methods.html#background-data",
+    "title": "Methods",
+    "section": "",
+    "text": "I am reviewing the Territorial Coral Reef Monitoring Program (TCRMP) dataset from 2013-2021 to investigate damselfish biomass and abundance. See statistical analysis to view the damselfish population trends between 2012-2021.\nFor my thesis, I will also incorporate coral health and macroalgae abundance to see if there is a correlation with:\nI hope to get a hold of DPNR’s dataset of damselfish predation to fill in gaps that TCRMP has. For example, not every diver knows/ records damselfish species during their coral health surveys to make an accurate depiction of damselfish-coral interaction."
+  },
+  {
+    "objectID": "Methods.html#field-methods",
+    "href": "Methods.html#field-methods",
+    "title": "Methods",
+    "section": "Field Methods",
+    "text": "Field Methods\n\n\n\nFigure No. 1. A photo of a volunteer diver, Emma Dlutkowski, taken by Cheyenne L. Goodman\n\n\nMy site location is Brewers Bay, east of the Territorial Coral Reef Monitoring Program (TCRMP) site.. I have 18 Orbicella annularis plots: 6 damselfish-free control plots, 6 damselfish infested Orbicella annularis plots, and 6 Orbicella annularis plots where damselfish is removed.\nWeekly, two to three divers will dive (&lt;25ft) at Brewers Bay (Figure No. 2) to complete a short coral health survey, fish survey and collect fish. One diver will be collecting data by scanning each 1m^2 plot with an underwater camera. Once PASTs nubbins are deployed, the experiment will end at 10 weeks.\nPhotogrammetry will be used on Agisoft Professional to look at coral growth and predation marks.\n\n\n\nFigure No. 2. A photo of Orbicella annularis taken by Cheyenne L. Goodman\n\n\n\nDamselfish Collection\nAll species of damselfish are required to be removed from designated plots. They are to be released to Perseverance Bay after capture."
+  },
+  {
+    "objectID": "Methods.html#damselfish-collection",
+    "href": "Methods.html#damselfish-collection",
+    "title": "Methods",
+    "section": "Damselfish Collection",
+    "text": "Damselfish Collection\nAll species of damselfish are required to be removed from designated plots."
+  },
+  {
+    "objectID": "Methods.html#water-table-methods",
+    "href": "Methods.html#water-table-methods",
+    "title": "Methods",
+    "section": "Water Table Methods",
+    "text": "Water Table Methods\nTwo 40gal water tables contain 48 Porites astreoides coral nubbins for ten days. 36 coral nubbins will be deployed in randomly across the 18 plots with one bleached and one unbleached coral in each plot.\nTwelve Porites astreoides (PAST) from Brewers Bay at relative depth (15-20ft) will be fragmented into ~5cm coral nubbins (n=48). Coral nubbins will be equally divided between ambient water temperature ~28 C and heated water temperature (~32C).\nDue to the recent renovations in the Marine Science Center parking lot in July 2025, I created an altered water table design which required &gt;3 daily water changes. Three methods of shading was applied and neither water tables recieved flow. A hobologger was placed in each water table to record temperature every hour. See statistical analysis to view the results of this water table design."
+  },
+  {
+    "objectID": "Methods.html#data-collection",
+    "href": "Methods.html#data-collection",
+    "title": "Methods",
+    "section": "Data Collection",
+    "text": "Data Collection\nData is collected every month to monitor coral health. An underwater camera is used to scan ."
+  },
+  {
+    "objectID": "Methods.html#statistical-analsysis",
+    "href": "Methods.html#statistical-analsysis",
+    "title": "Methods",
+    "section": "Statistical Analsysis",
+    "text": "Statistical Analsysis"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Introduction and Research Objectives",
+    "section": "",
+    "text": "Figure No. 1. A photo of Orbicella annularis taken by Cheyenne L. Goodman"
+  },
+  {
+    "objectID": "index.html#introduction",
+    "href": "index.html#introduction",
+    "title": "Introduction and Research Objectives",
+    "section": "Introduction",
+    "text": "Introduction\nThe Caribbean is home to 10% of the global coral cover, yet over 75% of Caribbean corals are considered threatened (UNEP-WCMC et al., 2021; Burke et al., 2011). Both global and local stressors such as disease and thermal stress has caused massive die-offs in corals and other ecologically important species such as Diadema antillarum ; therefore, causing an increase in macroalgae (Jackson et al., 2014). Figure No. 1 shows a reef building stony coral, Orbicella annularis that provides shelter and structure to reef fish.\n Native to the Caribbean, there are eight species of damselfish that range from herbivore and planktivores. These fish have aggressive behavior that causes them to defend their territories and bite coral to create algal gardens for food (Kaufman, 1981)."
+  },
+  {
+    "objectID": "index.html#research-objectives",
+    "href": "index.html#research-objectives",
+    "title": "Introduction and Research Objectives",
+    "section": "Research Objectives",
+    "text": "Research Objectives\nI aim to answer these questions with my research thesis:\n\nDoes damselfish presence through predation bites and algal gardens truly negatively impact coral growth?\nHow does damselfish presence and algal gardens negatively impact the recovery of corals after thermal stress?\nHow has damselfish presence correlated to coral health, disease, and bleaching recovery within the past 10 years?"
+  },
+  {
+    "objectID": "index.html#background",
+    "href": "index.html#background",
+    "title": "Introduction and Research Objectives",
+    "section": "Background",
+    "text": "Background\nThis website serves as a record of my progress in the Masters in Marine in Environmental Science program at the University of the Virgin Islands. This website is created for MMES 565 taught by Jeremiah Blondeau."
+  },
+  {
+    "objectID": "Methods.html#statistical-analysis",
+    "href": "Methods.html#statistical-analysis",
+    "title": "Methods",
+    "section": "Statistical Analysis",
+    "text": "Statistical Analysis\nI\nI am reviewing the Territorial Coral Reef Monitoring Program (TCRMP) dataset from 2013-2021 to investigate damselfish biomass and abundance. See statistical analysis to view the damselfish population trends between 2012-2021.\nFor my thesis, I will also incorporate coral health and macroalgae abundance to see if there is a correlation with:\nI hope to get a hold of DPNR’s dataset of damselfish predation to fill in gaps that TCRMP has. For example, not every diver knows/ records damselfish species during their coral health surveys to make an accurate depiction of damselfish-coral interaction."
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "Introduction and Research Objectives",
+    "section": "References",
+    "text": "References\nBurke, L., Reytar, K., Spalding, M. & Perry, A. (2011). Reefs at risk revisited. Washington, DC: World Resources Institute (WRI).\nJackson, J., Donovan, M., Cramer, K., & Lam, V. (2014). Status and trends of Caribbean coral reefs: 1970-2012. Gland, Switzerland: Global Coral Reef Monitoring Network; International Union for the Conservation of Nature (IUCN).\nKaufman, L. (1981). There was Biological Disturbance on Pleistocene Coral Reefs. Paleobiology, 7(4), 527–532.\nUNEP-WCMC, WorldFish Centre, WRI, TNC (2021). Global distribution of warm-water coral reefs, compiled from multiple sources including the Millennium Coral Reef Mapping Project. Version 4.1. Includes contributions from IMaRS-USF and IRD (2005), IMaRS-USF (2005) and Spalding et al. (2001). Cambridge (UK): UN Environment World Conservation Monitoring Centre."
+  },
+  {
+    "objectID": "Introduction.html#references",
+    "href": "Introduction.html#references",
+    "title": "Introduction and Research Objectives",
+    "section": "References",
+    "text": "References\nBurke, L., Reytar, K., Spalding, M. & Perry, A. (2011). Reefs at risk revisited. Washington, DC: World Resources Institute (WRI).\nJackson, J., Donovan, M., Cramer, K., & Lam, V. (2014). Status and trends of Caribbean coral reefs: 1970-2012. Gland, Switzerland: Global Coral Reef Monitoring Network; International Union for the Conservation of Nature (IUCN).\nKaufman, L. (1981). There was Biological Disturbance on Pleistocene Coral Reefs. Paleobiology, 7(4), 527–532.\nUNEP-WCMC, WorldFish Centre, WRI, TNC (2021). Global distribution of warm-water coral reefs, compiled from multiple sources including the Millennium Coral Reef Mapping Project. Version 4.1. Includes contributions from IMaRS-USF and IRD (2005), IMaRS-USF (2005) and Spalding et al. (2001). Cambridge (UK): UN Environment World Conservation Monitoring Centre.\n##Background\nThis website serves as a record of my progress in the Masters in Marine in Environmental Science program at the University of the Virgin Islands. This website is created for MMES 565 taught by Jeremiah Blondeau."
+  }
+]
