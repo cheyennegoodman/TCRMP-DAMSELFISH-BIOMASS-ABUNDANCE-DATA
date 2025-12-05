@@ -1,0 +1,32 @@
+{
+    "id": "2C894266",
+    "path": "~/SM/Quarto_experiments/docs/Lila_First_Quarto.qmd",
+    "project_path": "docs/Lila_First_Quarto.qmd",
+    "type": "quarto_markdown",
+    "hash": "3949292172",
+    "contents": "",
+    "dirty": false,
+    "created": 1758199287342.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "rmdVisualMode": "false",
+        "rmdVisualWrapConfigured": "true",
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "29,0",
+        "scrollLine": "18",
+        "docOutlineVisible": "1",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "843:492"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1758204126,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1758204126535,
+    "read_only": false,
+    "read_only_alternatives": []
+}
